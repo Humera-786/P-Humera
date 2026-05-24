@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SkillBridge AI Final</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body{
+  margin:0;
+  font-family: Arial;
+  background: linear-gradient(135deg,#667eea,#764ba2,#6ee7b7);
+  background-size:400% 400%;
+  animation: bg 10s infinite;
+}
+
+@keyframes bg{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* LOGIN */
+#loginBox{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.loginCard{
+  background:white;
+  padding:25px;
+  border-radius:15px;
+  text-align:center;
+  width:280px;
+}
+
+input{
+  width:90%;
+  padding:10px;
+  margin:10px 0;
+}
+
+/* APP */
+#app{
+  display:none;
+  padding:15px;
+}
+
+.container{
+  max-width:750px;
+  margin:auto;
+  background:rgba(255,255,255,0.2);
+  padding:20px;
+  border-radius:15px;
+  backdrop-filter:blur(10px);
+}
+
+/* TASK */
+li{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  margin:10px 0;
+  background:rgba(255,255,255,0.3);
+  border-radius:10px;
+}
+
+.done{
+  text-decoration:line-through;
+  opacity:0.6;
+}
+
+/* BUTTON */
+button{
+  padding:8px 12px;
+  margin:5px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  background:#111;
+  color:white;
+}
+
+/* TIMER */
+.timer{
+  font-size:22px;
+  margin:10px 0;
+  font-weight:bold;
+}
+
+/* FINISH BUTTON */
+#finishBtn{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:12px 22px;
+  border-radius:50px;
+  background:#ff4081;
+  color:white;
+  font-size:16px;
+  display:none;
+  z-index:999;
+}
+
+/* ANIMATION */
+@keyframes rise{
+  0%{transform:translateY(0);opacity:1;}
+  100%{transform:translateY(-120vh);opacity:0;}
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <div class="loginCard">
+    <h2>👤 Login</h2>
+    <input id="username" placeholder="Enter your name">
+    <button onclick="login()">Start</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="container">
+
+    <h2 id="welcome"></h2>
+
+    <!-- TIMER -->
+    <div class="timer" id="timer">25:00</div>
+    <button onclick="startTimer()">Start Timer</button>
+    <button onclick="resetTimer()">Reset</button>
+
+    <hr>
+
+    <!-- TASK -->
+    <input id="taskInput" placeholder="Enter task">
+    <button onclick="addTask()">Add</button>
+
+    <ul id="taskList"></ul>
+
+  </div>
+</div>
+
+<!-- FINISH BUTTON -->
+<button id="finishBtn" onclick="finishSession()">🎉 Finish Session</button>
+
+<script>
+
+let tasks = [];
+let time = 1500;
+let interval;
+let userName = "";
+
+/* LOGIN */
+function login(){
+  userName = document.getElementById("username").value;
+
+  if(!userName){
+    alert("Enter your name");
+    return;
+  }
+
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("finishBtn").style.display="block";
+
+  document.getElementById("welcome").innerText =
+    "Welcome " + userName + " 🚀";
+
+  speak("Welcome " + userName + ". Let's start your success journey!");
+}
+
+/* VOICE */
+function speak(text){
+  let msg = new SpeechSynthesisUtterance(text);
+  msg.pitch = 1.2;
+  msg.rate = 1;
+  window.speechSynthesis.speak(msg);
+}
+
+/* TIMER */
+function startTimer(){
+  clearInterval(interval);
+
+  interval = setInterval(()=>{
+    if(time <= 0){
+      clearInterval(interval);
+      speak("Time is up!");
+      return;
+    }
+
+    time--;
+
+    let m = Math.floor(time/60);
+    let s = time%60;
+
+    document.getElementById("timer").innerText =
+      `${m}:${s<10?'0':''}${s}`;
+
+  },1000);
+}
+
+function resetTimer(){
+  clearInterval(interval);
+  time = 1500;
+  document.getElementById("timer").innerText = "25:00";
+}
+
+/* ADD TASK */
+function addTask(){
+  let t = document.getElementById("taskInput").value;
+  if(!t) return alert("Enter task");
+
+  tasks.push({text:t,done:false});
+  document.getElementById("taskInput").value="";
+  render();
+}
+
+/* ✔ TICK (NO BALLOONS) */
+function completeTask(i){
+
+  tasks[i].done = true;
+  render();
+
+  clearInterval(interval);
+
+  speak("Great job " + userName + "! You completed " + tasks[i].text);
+
+  smallEffect();
+}
+
+/* SMALL EFFECT ONLY */
+function smallEffect(){
+  for(let i=0;i<15;i++){
+    let c=document.createElement("div");
+    c.style.position="fixed";
+    c.style.width="6px";
+    c.style.height="6px";
+    c.style.left=Math.random()*100+"vw";
+    c.style.top="0";
+    c.style.background=["#fff","#ff0","#0ff","#f0f","#0f0"][Math.floor(Math.random()*5)];
+    c.style.animation="rise 2s linear";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),2000);
+  }
+}
+
+/* DELETE */
+function deleteTask(i){
+  tasks.splice(i,1);
+  render();
+}
+
+/* RENDER */
+function render(){
+  let list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  tasks.forEach((t,i)=>{
+    list.innerHTML += `
+      <li>
+        <span class="${t.done?'done':''}">${t.text}</span>
+        <div>
+          <button onclick="completeTask(${i})">✔</button>
+          <button onclick="deleteTask(${i})">❌</button>
+        </div>
+      </li>
+    `;
+  });
+}
+
+/* 🔊 STRONG BLAST SOUND */
+function playSound(){
+
+  let audio = new Audio("https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3");
+  audio.volume = 1;
+  audio.play();
+
+  setTimeout(()=>{
+    let audio2 = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
+    audio2.volume = 1;
+    audio2.play();
+  },300);
+}
+
+/* 🎉 BIG CELEBRATION */
+function bigCelebration(){
+
+  // CONFETTI
+  for(let i=0;i<80;i++){
+    let c=document.createElement("div");
+    c.style.position="fixed";
+    c.style.width="8px";
+    c.style.height="8px";
+    c.style.left=Math.random()*100+"vw";
+    c.style.top="0";
+    c.style.background=["red","yellow","blue","green","pink","orange","purple"][Math.floor(Math.random()*7)];
+    c.style.animation="rise 4s linear";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4000);
+  }
+
+  // BALLOONS 🎈
+  for(let i=0;i<40;i++){
+    let b=document.createElement("div");
+    b.style.position="fixed";
+    b.style.width="12px";
+    b.style.height="18px";
+    b.style.borderRadius="50%";
+    b.style.left=Math.random()*100+"vw";
+    b.style.top="100vh";
+    b.style.background=["red","blue","green","yellow","pink","orange"][Math.floor(Math.random()*6)];
+    b.style.animation="rise 5s linear";
+    document.body.appendChild(b);
+    setTimeout(()=>b.remove(),5000);
+  }
+
+  // HEARTS ❤️
+  for(let i=0;i<25;i++){
+    let h=document.createElement("div");
+    h.innerHTML="❤️";
+    h.style.position="fixed";
+    h.style.left=Math.random()*100+"vw";
+    h.style.top="100vh";
+    h.style.fontSize="18px";
+    h.style.animation="rise 4s linear";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),4000);
+  }
+}
+
+/* 🎉 FINISH SESSION */
+function finishSession(){
+
+  clearInterval(interval);
+
+  speak("Amazing work " + userName + "! You completed your full session!");
+
+  playSound();
+
+  bigCelebration();
+}
+
+</script>
+
+</body>
+</html>
