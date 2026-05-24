@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
 body{
   margin:0;
   font-family: Arial;
@@ -91,6 +90,27 @@ button{
   font-weight:bold;
 }
 
+/* PROGRESS */
+#progressBox{
+  margin:10px 0;
+  font-weight:bold;
+}
+
+#progressBar{
+  width:100%;
+  height:10px;
+  background:#ddd;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+#progressFill{
+  height:10px;
+  width:0%;
+  background:#00ff99;
+  transition:0.3s;
+}
+
 /* FINISH BUTTON */
 #finishBtn{
   position:fixed;
@@ -111,7 +131,6 @@ button{
   0%{transform:translateY(0);opacity:1;}
   100%{transform:translateY(-120vh);opacity:0;}
 }
-
 </style>
 </head>
 
@@ -132,23 +151,29 @@ button{
 
     <h2 id="welcome"></h2>
 
-    <!-- TIMER -->
     <div class="timer" id="timer">25:00</div>
     <button onclick="startTimer()">Start Timer</button>
     <button onclick="resetTimer()">Reset</button>
 
     <hr>
 
-    <!-- TASK -->
     <input id="taskInput" placeholder="Enter task">
     <button onclick="addTask()">Add</button>
+
+    <!-- PROGRESS -->
+    <div id="progressBox">
+      Progress: <span id="progressText">0/0</span>
+      <div id="progressBar">
+        <div id="progressFill"></div>
+      </div>
+    </div>
 
     <ul id="taskList"></ul>
 
   </div>
 </div>
 
-<!-- FINISH BUTTON -->
+<!-- FINISH -->
 <button id="finishBtn" onclick="finishSession()">🎉 Finish Session</button>
 
 <script>
@@ -174,14 +199,12 @@ function login(){
   document.getElementById("welcome").innerText =
     "Welcome " + userName + " 🚀";
 
-  speak("Welcome " + userName + ". Let's start your success journey!");
+  speak("Welcome " + userName);
 }
 
-/* VOICE */
+/* SPEAK */
 function speak(text){
   let msg = new SpeechSynthesisUtterance(text);
-  msg.pitch = 1.2;
-  msg.rate = 1;
   window.speechSynthesis.speak(msg);
 }
 
@@ -192,7 +215,7 @@ function startTimer(){
   interval = setInterval(()=>{
     if(time <= 0){
       clearInterval(interval);
-      speak("Time is up!");
+      speak("Time is up");
       return;
     }
 
@@ -223,39 +246,30 @@ function addTask(){
   render();
 }
 
-/* ✔ TICK (NO BALLOONS) */
+/* COMPLETE */
 function completeTask(i){
-
   tasks[i].done = true;
   render();
-
-  clearInterval(interval);
-
-  speak("Great job " + userName + "! You completed " + tasks[i].text);
-
-  smallEffect();
-}
-
-/* SMALL EFFECT ONLY */
-function smallEffect(){
-  for(let i=0;i<15;i++){
-    let c=document.createElement("div");
-    c.style.position="fixed";
-    c.style.width="6px";
-    c.style.height="6px";
-    c.style.left=Math.random()*100+"vw";
-    c.style.top="0";
-    c.style.background=["#fff","#ff0","#0ff","#f0f","#0f0"][Math.floor(Math.random()*5)];
-    c.style.animation="rise 2s linear";
-    document.body.appendChild(c);
-    setTimeout(()=>c.remove(),2000);
-  }
+  speak("Good job " + userName);
 }
 
 /* DELETE */
 function deleteTask(i){
   tasks.splice(i,1);
   render();
+}
+
+/* PROGRESS UPDATE */
+function updateProgress(){
+  let total = tasks.length;
+  let done = tasks.filter(t=>t.done).length;
+
+  document.getElementById("progressText").innerText =
+    `${done}/${total}`;
+
+  let percent = total === 0 ? 0 : (done/total)*100;
+  document.getElementById("progressFill").style.width =
+    percent + "%";
 }
 
 /* RENDER */
@@ -274,78 +288,48 @@ function render(){
       </li>
     `;
   });
+
+  updateProgress();
 }
 
-/* 🔊 STRONG BLAST SOUND */
-function playSound(){
+/* FINISH SESSION (FIXED) */
+function finishSession(){
 
-  let audio = new Audio("https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3");
-  audio.volume = 1;
-  audio.play();
+  if(tasks.length === 0){
+    alert("Add at least one task first!");
+    speak("Please add tasks first");
+    return;
+  }
 
-  setTimeout(()=>{
-    let audio2 = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
-    audio2.volume = 1;
-    audio2.play();
-  },300);
+  let completed = tasks.filter(t=>t.done).length;
+
+  if(completed === 0){
+    alert("Complete at least one task!");
+    speak("Complete some tasks first");
+    return;
+  }
+
+  clearInterval(interval);
+
+  speak(`Great job ${userName}! You completed ${completed} tasks`);
+
+  bigCelebration();
 }
 
-/* 🎉 BIG CELEBRATION */
+/* CELEBRATION */
 function bigCelebration(){
-
-  // CONFETTI
-  for(let i=0;i<80;i++){
+  for(let i=0;i<50;i++){
     let c=document.createElement("div");
     c.style.position="fixed";
     c.style.width="8px";
     c.style.height="8px";
     c.style.left=Math.random()*100+"vw";
     c.style.top="0";
-    c.style.background=["red","yellow","blue","green","pink","orange","purple"][Math.floor(Math.random()*7)];
-    c.style.animation="rise 4s linear";
+    c.style.background=["red","blue","green","yellow","pink"][Math.floor(Math.random()*5)];
+    c.style.animation="rise 3s linear";
     document.body.appendChild(c);
-    setTimeout(()=>c.remove(),4000);
+    setTimeout(()=>c.remove(),3000);
   }
-
-  // BALLOONS 🎈
-  for(let i=0;i<40;i++){
-    let b=document.createElement("div");
-    b.style.position="fixed";
-    b.style.width="12px";
-    b.style.height="18px";
-    b.style.borderRadius="50%";
-    b.style.left=Math.random()*100+"vw";
-    b.style.top="100vh";
-    b.style.background=["red","blue","green","yellow","pink","orange"][Math.floor(Math.random()*6)];
-    b.style.animation="rise 5s linear";
-    document.body.appendChild(b);
-    setTimeout(()=>b.remove(),5000);
-  }
-
-  // HEARTS ❤️
-  for(let i=0;i<25;i++){
-    let h=document.createElement("div");
-    h.innerHTML="❤️";
-    h.style.position="fixed";
-    h.style.left=Math.random()*100+"vw";
-    h.style.top="100vh";
-    h.style.fontSize="18px";
-    h.style.animation="rise 4s linear";
-    document.body.appendChild(h);
-    setTimeout(()=>h.remove(),4000);
-  }
-}
-
-/* 🎉 FINISH SESSION */
-function finishSession(){
-
-  clearInterval(interval);
-
-  speak("Amazing work " + userName + "! You completed your full session!");
-
-  playSound();
-
-  bigCelebration();
 }
 
 </script>
